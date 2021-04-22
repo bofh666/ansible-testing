@@ -1,4 +1,13 @@
 ---
+scenario:
+  name: prod
+  test_sequence:
+    - lint
+    - destroy
+    - create
+    - prepare
+    - converge
+    - verify
 dependency:
   name: galaxy
   enabled: false
