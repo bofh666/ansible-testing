@@ -1,0 +1,29 @@
+---
+- name: Processing CentOS host(s)...
+  include: centos.yml
+  when: ansible_distribution == 'CentOS'
+
+- name: Processing Ubuntu host(s)...
+  include: ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Copy demo database dump to target host
+  copy:
+    src: '{{ database }}.sql'
+    owner: postgres
+    group: postgres
+    mode: 0644
+    dest: /tmp
+
+- name: Create demo database
+  community.postgresql.postgresql_db:
+    name: '{{ database }}'
+    state: present
+  become_user: postgres
+
+- name: Restore demo database dump
+  community.postgresql.postgresql_db:
+    name: '{{ database }}'
+    state: restore
+    target: /tmp/{{ database }}.sql
+  become_user: postgres

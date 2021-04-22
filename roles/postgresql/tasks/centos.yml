@@ -1,0 +1,43 @@
+---
+- name: Import PostgreSQL repository signing key
+  ansible.builtin.rpm_key:
+    key: https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-{{ postgresql_version }}
+    state: present
+
+- name: Create PostgreSQL repository
+  ansible.builtin.dnf:
+    name:
+      - https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    state: present
+
+- name: Disable the built-in PostgreSQL module
+  ansible.builtin.command: dnf -qy module disable postgresql
+  args:
+    warn: false
+
+- name: Install PostgreSQL latest stable version ({{ postgresql_version }})
+  ansible.builtin.dnf:
+    name:
+      - postgresql{{ postgresql_version }}-server
+      - postgresql{{ postgresql_version }}
+
+- name: Install psycopg2 Python module
+  ansible.builtin.dnf:
+    name:
+      - python3-psycopg2
+    state: present
+
+- name: Initialize PostgreSQL cluster
+  ansible.builtin.command: /usr/pgsql-{{ postgresql_version }}/bin/postgresql-{{ postgresql_version }}-setup initdb
+  args:
+    warn: false
+  ignore_errors: true
+  failed_when: false
+  register: cluster_init
+
+- name: Enable and start PostgreSQL systemd unit if needed
+  ansible.builtin.systemd:
+    name: postgresql-{{ postgresql_version }}
+    enabled: true
+    state: started
+  when: cluster_init.rc == 0

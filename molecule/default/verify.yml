@@ -1,0 +1,39 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check if users exist
+      ansible.builtin.getent:
+        database: passwd
+        key: '{{ item }}'
+      with_items:
+        - fred
+        - mark
+        - adam
+
+- hosts: frontend
+  tasks:
+    - name: Check if nginx returns correct content
+      ansible.builtin.uri:
+        headers:
+          Host: '{{ datacenter }}-{{ ansible_hostname }}'
+        return_content: true
+        url: http://127.0.0.1
+      register: get
+    - name: Show the content
+      ansible.builtin.debug:
+        msg: "'{{ get.content }}'"
+
+- hosts: backend
+  gather_facts: false
+  become: true
+  become_user: postgres
+  tasks:
+    - name: Check if demo database exists and contains correct data
+      community.postgresql.postgresql_query:
+        db: '{{ database }}'
+        query: select * from "table"
+      register: data
+    - name: Show the data
+      debug:
+        var: data.query_result

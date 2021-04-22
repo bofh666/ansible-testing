@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: true
+  roles:
+    - common
+
+- hosts: frontend
+  become: true
+  roles:
+    - nginx
+
+- hosts: backend
+  become: true
+  roles:
+    - postgresql

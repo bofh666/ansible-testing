@@ -1,0 +1,41 @@
+---
+dependency:
+  name: galaxy
+  enabled: false
+driver:
+  name: vagrant
+  provider:
+    name: virtualbox
+platforms:
+  - name: nginx01
+    groups:
+      - frontend
+    box: centos/8
+    instance_raw_config_args:
+      - "vm.network 'forwarded_port', guest: 80, host: 8081"
+  - name: nginx02
+    groups:
+      - frontend
+    box: centos/8
+    instance_raw_config_args:
+      - "vm.network 'forwarded_port', guest: 80, host: 8082"
+  - name: postgresql01
+    groups:
+      - backend
+    box: centos/8
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      remote_tmp: /tmp
+  env:
+    ANSIBLE_ROLES_PATH: ../../roles
+  inventory:
+    links:
+      group_vars: ../../inventories/prod/group_vars
+lint: |
+  set -e
+  yamllint -d relaxed --no-warnings molecule roles
+  ansible-lint -qq roles playbook.yml molecule/default/verify.yml
+verifier:
+  name: ansible

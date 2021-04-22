@@ -1,0 +1,6 @@
+[frontend]
+nginx01.dc3.domain.tld
+nginx02.dc3.domain.tld
+
+[backend]
+postgresql.dc3.domain.tld

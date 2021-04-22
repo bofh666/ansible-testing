@@ -1,0 +1,26 @@
+---
+- name: Install Docker and corresponding Python module
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - docker.io
+      - python3-docker
+    state: present
+
+- name: Ensure Docker is enabled and started
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Start nginx Docker container
+  community.docker.docker_container:
+    name: '{{ ansible_hostname }}'
+    image: nginx:stable-alpine
+    volumes:
+      - /opt/nginx.conf:/etc/nginx/conf.d/default.conf
+    published_ports:
+      - 80:80
+    container_default_behavior: no_defaults
+    restart: true
+    state: started
